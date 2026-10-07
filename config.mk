@@ -4,3 +4,7 @@
 PRODUCT_PACKAGES += \
     kernelsu_init \
     kernelsu_ko
+
+# Set together with the packages above: without /init.ksu in the ramdisk the
+# kernel cannot start init and panics.
+BOARD_KERNEL_CMDLINE += rdinit=/init.ksu
