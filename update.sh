@@ -2,21 +2,22 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Update prebuilt/ to a KernelSU-Next release: fetch and verify the
-# kernelsu.ko for our KMI, and rebuild ksuinit with our patch applied.
+# kernelsu.ko for the given KMI, and rebuild ksuinit with our patch applied.
 #
-# usage: update.sh <release tag> <android ndk dir>
+# usage: update.sh <release tag> <android ndk dir> [kmi, default android14-6.1]
 
 set -euo pipefail
 
-if [[ $# -ne 2 ]]; then
-  echo "usage: $0 <release tag> <android ndk dir>" >&2
+if [[ $# -lt 2 || $# -gt 3 ]]; then
+  echo "usage: $0 <release tag> <android ndk dir> [kmi, default android14-6.1]" >&2
   exit 1
 fi
 
 TAG="$1"
 NDK="$(realpath "$2")"
+KMI="${3:-android14-6.1}"
 REPO="KernelSU-Next/KernelSU-Next"
-KO="aarch64-android14-6.1_kernelsu.ko"
+KO="aarch64-${KMI}_kernelsu.ko"
 MY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 WORK="$(mktemp -d)"
@@ -49,5 +50,5 @@ install -m 0644 "${WORK}/${KO}" "${MY_DIR}/prebuilt/kernelsu.ko"
 install -m 0644 "${WORK}/src/userspace/ksuinit/target/aarch64-linux-android/release/ksuinit" \
   "${MY_DIR}/prebuilt/init.ksu"
 
-echo "Updated to ${TAG} ($(git -C "${WORK}/src" rev-parse --short HEAD)):"
+echo "Updated to ${TAG} ($(git -C "${WORK}/src" rev-parse --short HEAD)), KMI ${KMI}:"
 (cd "${MY_DIR}" && sha256sum prebuilt/*)
