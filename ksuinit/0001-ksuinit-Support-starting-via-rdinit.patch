@@ -1,0 +1,80 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Lunia <lunia0251@proton.me>
+Date: Wed, 7 Oct 2026 20:55:27 +0700
+Subject: [PATCH] ksuinit: Support starting via rdinit
+
+When the kernel runs us through rdinit= the real first stage init is
+still at /init, so load kernelsu.ko and exec it as /init without
+replacing it. Started as /init, the behavior is unchanged.
+
+Assisted-by: Claude-Code:claude-opus-5.5
+---
+ userspace/ksuinit/src/init.rs |  7 ++++++-
+ userspace/ksuinit/src/main.rs | 19 +++++++++++++++++--
+ 2 files changed, 23 insertions(+), 3 deletions(-)
+
+diff --git a/userspace/ksuinit/src/init.rs b/userspace/ksuinit/src/init.rs
+index 92868b3..55e74cf 100644
+--- a/userspace/ksuinit/src/init.rs
++++ b/userspace/ksuinit/src/init.rs
+@@ -91,7 +91,7 @@ fn unlimit_kmsg() {
+     }
+ }
+ 
+-pub fn init() -> Result<()> {
++pub fn init(rdinit: bool) -> Result<()> {
+     // Setup kernel log first
+     setup_kmsg();
+ 
+@@ -112,6 +112,11 @@ pub fn init() -> Result<()> {
+         }
+     }
+ 
++    if rdinit {
++        log::info!("started via rdinit, init is /init");
++        return Ok(());
++    }
++
+     // And now we should prepare the real init to transfer control to it
+     unlink("/init")?;
+ 
+diff --git a/userspace/ksuinit/src/main.rs b/userspace/ksuinit/src/main.rs
+index 36206fc..57666e3 100644
+--- a/userspace/ksuinit/src/main.rs
++++ b/userspace/ksuinit/src/main.rs
+@@ -2,6 +2,8 @@
+ 
+ mod init;
+ 
++use std::ffi::CStr;
++
+ use rustix::{cstr, runtime::execve};
+ /// # Safety
+ /// This is the entry point of the program
+@@ -9,8 +11,21 @@ use rustix::{cstr, runtime::execve};
+ /// https://github.com/rust-lang/rust/blob/3071aefdb2821439e2e6f592f41a4d28e40c1e79/library/std/src/sys/unix/mod.rs#L80
+ /// So we use the C main function and call rust code from there
+ #[unsafe(no_mangle)]
+-pub unsafe extern "C" fn main(_argc: i32, argv: *const *const u8, envp: *const *const u8) -> i32 {
+-    let _ = init::init();
++pub unsafe extern "C" fn main(argc: i32, argv: *const *const u8, envp: *const *const u8) -> i32 {
++    // Started via rdinit= instead of replacing /init: the real init is still in place
++    let rdinit = argc > 0
++        && unsafe { CStr::from_ptr(*argv as *const core::ffi::c_char) }.to_bytes() != b"/init";
++    let _ = init::init(rdinit);
++    // Hand over as /init so the real init runs and logs exactly as without us
++    let mut args = Vec::new();
++    let argv = if rdinit {
++        args.push(cstr!("/init").as_ptr().cast());
++        args.extend((1..argc as usize).map(|i| unsafe { *argv.add(i) }));
++        args.push(core::ptr::null());
++        args.as_ptr()
++    } else {
++        argv
++    };
+     unsafe {
+         execve(cstr!("/init"), argv, envp);
+     }
+-- 
+2.55.0
+

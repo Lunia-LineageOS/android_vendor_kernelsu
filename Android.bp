@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: Apache-2.0
+
+package {
+    default_applicable_licenses: ["vendor_kernelsu_license"],
+}
+
+license {
+    name: "vendor_kernelsu_license",
+    visibility: [":__subpackages__"],
+    license_kinds: [
+        "SPDX-license-identifier-GPL-2.0-only",
+        "SPDX-license-identifier-GPL-3.0",
+    ],
+    license_text: [
+        "LICENSE.GPL-2.0",
+        "LICENSE.GPL-3.0",
+    ],
+}
+
+// Both live in the vendor ramdisk root: the kernel runs /init.ksu via
+// rdinit=, which loads /kernelsu.ko and then execs the real /init.
+prebuilt_root {
+    name: "kernelsu_init",
+    src: "prebuilt/init.ksu",
+    filename: "init.ksu",
+    vendor_ramdisk: true,
+    install_in_root: true,
+    install_path_skip_first_stage_ramdisk_dir: true,
+}
+
+prebuilt_root {
+    name: "kernelsu_ko",
+    src: "prebuilt/kernelsu.ko",
+    filename: "kernelsu.ko",
+    vendor_ramdisk: true,
+    install_in_root: true,
+    install_path_skip_first_stage_ramdisk_dir: true,
+}
