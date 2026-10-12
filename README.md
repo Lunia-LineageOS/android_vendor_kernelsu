@@ -14,8 +14,8 @@ bundled: install the official KernelSU-Next APK.
 
 | File | Source |
 |---|---|
-| `prebuilt/kernelsu.ko` | v3.4.0 `aarch64-android14-6.1_kernelsu.ko`, sha256 `0d6f528552f520644c55626ba714a6b0ce2c6e83f501860b3fcd739823bd80c0` |
-| `prebuilt/init.ksu` | v3.4.0 (`1a879d6a`) `userspace/ksuinit` + patch, NDK r29, sha256 `5916a2e1272d2ad343184e4300b241fbb77e02423bdc79f1c50989e6920ab6f6` |
+| `prebuilt/kernelsu.ko` | v3.4.1 `aarch64_android14-6.1_kernelsu.ko`, sha256 `6701e85ce44b655d6f015002fe48f89cb6041f5d30b35aced5cdb27c0dad568e` |
+| `prebuilt/init.ksu` | v3.4.1 (`8f902aeb`) `userspace/ksuinit` + patch, NDK r29, sha256 `3246e99d73498ff281d5b0957410105486586e423541fae5e0cf87b9c0f058d3` |
 
 Update with `./update.sh <tag> <ndk dir> [kmi]`. The KMI defaults to
 `android14-6.1`; pass e.g. `android16-6.12` after a kernel upgrade.

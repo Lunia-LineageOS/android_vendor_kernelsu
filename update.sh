@@ -17,7 +17,10 @@ TAG="$1"
 NDK="$(realpath "$2")"
 KMI="${3:-android14-6.1}"
 REPO="KernelSU-Next/KernelSU-Next"
-KO="aarch64-${KMI}_kernelsu.ko"
+KO="aarch64_${KMI}_kernelsu.ko"
+if ! gh api "repos/${REPO}/releases/tags/${TAG}" --jq '.assets[].name' | grep -qx "${KO}"; then
+  KO="aarch64-${KMI}_kernelsu.ko"
+fi
 MY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 WORK="$(mktemp -d)"
